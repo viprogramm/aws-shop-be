@@ -27,11 +27,14 @@ provider:
   region: eu-west-1
 
 # you can add statements to the Lambda function's IAM Role here
-#  iam:
-#    role:
-#      statements:
-#        - Effect: "Allow"
-#          Action:
+  iam:
+    role:
+      statements:
+        - Effect: "Allow"
+          Action:
+            - "dynamodb:*"
+          Resource: "*"
+        #  Action:
 #            - "s3:ListBucket"
 #          Resource: { "Fn::Join" : ["", ["arn:aws:s3:::", { "Ref" : "ServerlessDeploymentBucket" } ] ]  }
 #        - Effect: "Allow"
@@ -45,8 +48,10 @@ provider:
 #                - "/*"
 
 # you can define service wide environment variables here
-#  environment:
-#    variable1: value1
+
+  environment:
+    TABLE_NAME_PRODUCTS: products
+    TABLE_NAME_STOCKS: stocks
 
 # you can add packaging information here
 #package:
@@ -57,6 +62,13 @@ provider:
 #    - include-me-dir/**
 
 functions:
+  addProduct:
+    handler: handler.addProduct
+    events:
+      - http:
+          path: products
+          method: post
+          cors: true
   getProductsList:
     handler: handler.getProductsList
     events:
@@ -75,6 +87,35 @@ functions:
             parameters:
               paths:
                 productId: true
+
+# resources: # CloudFormation template syntax from here on.
+#       Resources:
+#         products:
+#           Type: AWS::DynamoDB::Table
+#           Properties:
+#             TableName: products
+#             AttributeDefinitions:
+#               - AttributeName: id
+#                 AttributeType: S
+#             KeySchema:
+#               - AttributeName: id
+#                 KeyType: HASH
+#             ProvisionedThroughput:
+#               ReadCapacityUnits: 1
+#               WriteCapacityUnits: 1
+#         stocks:
+#           Type: AWS::DynamoDB::Table
+#           Properties:
+#             TableName: products
+#             AttributeDefinitions:
+#               - AttributeName: product_id
+#                 AttributeType: S
+#             KeySchema:
+#               - AttributeName: product_id
+#                 KeyType: HASH
+#             ProvisionedThroughput:
+#               ReadCapacityUnits: 1
+#               WriteCapacityUnits: 1
 #    The following are a few example events you can configure
 #    NOTE: Please make sure to change your handler code to work with those events
 #    Check the event documentation for details

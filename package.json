@@ -1,0 +1,14 @@
+{
+  "name": "aws-shop-be",
+  "description": "**BE Products List** [https://wenukxushg.execute-api.eu-west-1.amazonaws.com/dev/products/](https://wenukxushg.execute-api.eu-west-1.amazonaws.com/dev/products/)",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "aws-sdk": "^2.1473.0"
+  }
+}
