@@ -23,6 +23,9 @@ const serverlessConfiguration: AWS = {
       REGION: "eu-west-1",
       STAGE: "dev",
       BUCKET: "aws-shop-be-import",
+      SQS_URL: {
+        "Fn::ImportValue": "MyQueueUrl",
+      },
     },
     iam: {
       role: {
@@ -37,6 +40,11 @@ const serverlessConfiguration: AWS = {
             Action: ["s3:*"],
             Resource: "arn:aws:s3:::aws-shop-be-import/*",
           },
+          {
+            Effect: 'Allow',
+            Action: ['sqs:*'],
+            Resource: [{ 'Fn::ImportValue': 'MyQueueArn' }]
+          }
         ],
       },
     },
