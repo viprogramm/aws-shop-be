@@ -34,24 +34,24 @@ provider:
           Action:
             - "dynamodb:*"
           Resource: "*"
-        #  Action:
-#            - "s3:ListBucket"
-#          Resource: { "Fn::Join" : ["", ["arn:aws:s3:::", { "Ref" : "ServerlessDeploymentBucket" } ] ]  }
-#        - Effect: "Allow"
-#          Action:
-#            - "s3:PutObject"
-#          Resource:
-#            Fn::Join:
-#              - ""
-#              - - "arn:aws:s3:::"
-#                - "Ref" : "ServerlessDeploymentBucket"
-#                - "/*"
-
-# you can define service wide environment variables here
+        - Effect: "Allow"
+          Action:
+            - "sns:*"
+          Resource: 
+            Ref: createProductTopic
+        - Effect: "Allow"
+          Action:
+            - "sqs:*"
+          Resource:
+            - Fn::GetAtt: [ catalogItemsQueue, Arn ]
 
   environment:
     TABLE_NAME_PRODUCTS: products
     TABLE_NAME_STOCKS: stocks
+    SQS_URL: 
+      Ref: catalogItemsQueue
+    SNS_ARN: 
+      Ref: createProductTopic
 
 # you can add packaging information here
 #package:
@@ -87,6 +87,44 @@ functions:
             parameters:
               paths:
                 productId: true
+  catalogBatchProcess:
+    handler: handler.catalogBatchProcess
+    events:
+      - sqs:
+          batchSize: 5
+          arn:
+            Fn::GetAtt:
+              - catalogItemsQueue
+              - Arn
+
+resources:
+  Resources:
+    catalogItemsQueue:
+      Type: "AWS::SQS::Queue"
+      Properties:
+        QueueName: aws-sqs-sns-queue
+    createProductTopic:
+      Type: AWS::SNS::Topic
+      Properties:
+        TopicName: aws-sqs-sns-topic
+    SNSSubscription:
+      Type: AWS::SNS::Subscription
+      Properties:
+        Endpoint: vitovtlight@gmail.com
+        Protocol: email
+        TopicArn:
+          Ref: createProductTopic
+  Outputs:
+    MyQueueArn:
+      Value:
+        Fn::GetAtt: [ catalogItemsQueue, Arn ]
+      Export:
+        Name: 'MyQueueArn'
+    MyQueueUrl:
+      Value:
+        Fn::GetAtt: [ catalogItemsQueue, QueueUrl ]
+      Export:
+        Name: 'MyQueueUrl'
 
 # resources: # CloudFormation template syntax from here on.
 #       Resources:

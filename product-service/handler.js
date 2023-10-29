@@ -1,3 +1,4 @@
+const AWS = require("aws-sdk");
 const { DynamoDBClient } = require("@aws-sdk/client-dynamodb");
 const {
   DynamoDBDocumentClient,
@@ -139,6 +140,43 @@ module.exports = {
         },
         body: JSON.stringify(err, ["message", "arguments", "type", "name"]),
       };
+    }
+  },
+
+  catalogBatchProcess: async (event) => {
+    try {
+      const sns = new AWS.SNS({ region: "eu-west-1" });
+      const products = event.Records.map(async ({ body }) => {
+        const parsedBody = JSON.parse(body);
+        const { title, description, price } = parsedBody;
+        console.log("@PRODUCT: ", title, description, price);
+
+        if (
+          title === undefined ||
+          description === undefined ||
+          price === undefined
+        ) {
+          throw Error("@NO values", title, description, price);
+        }
+        const product = await addItem({
+          title,
+          description,
+          price: Number(price),
+        });
+        console.log("SAVED PRODUCT", product);
+        return product;
+      });
+      const productData = await Promise.all(products);
+      console.log("@@@PRODUCTS", productData);
+      const params = {
+        Subject: "Products was created",
+        Message: "Created products: " + JSON.stringify(productData),
+        TopicArn: process.env.SNS_ARN,
+      };
+      const data = await sns.publish(params).promise();
+      console.log("Message sent:", data.MessageId);
+    } catch (err) {
+      console.error("@SEROROR ", err);
     }
   },
 };
